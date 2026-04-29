@@ -1,0 +1,16 @@
+{
+  "output_dir": "C:/Users/duality/Desktop/What",
+  "width": "1000",
+  "height": "1000",
+  "model": "birefnet-portrait",
+  "alpha_matting": true,
+  "post_process": true,
+  "suffix": "_fri",
+  "output_format": "PNG",
+  "project": "",
+  "colour_ref": "C:/Users/duality/Desktop/Eliten/IMG_6322.CR2",
+  "colour_match": true,
+  "brightness_adj": 0.0,
+  "contrast_adj": 0.0,
+  "gamma_adj": 1.0
+}

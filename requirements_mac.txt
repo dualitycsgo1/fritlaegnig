@@ -1,0 +1,10 @@
+rembg>=2.0.57
+Pillow>=10.0.0
+rawpy>=0.18.1
+filetype>=1.2.0
+scipy>=1.11.0
+
+# On macOS, onnxruntime ships with CoreML support built-in.
+# CoreMLExecutionProvider gives hardware acceleration on Apple Silicon (M1/M2/M3/M4).
+# Do NOT use onnxruntime-gpu on macOS — it is a Windows/Linux package.
+onnxruntime>=1.18.0

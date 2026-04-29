@@ -1,0 +1,8 @@
+rembg>=2.0.57
+Pillow>=10.0.0
+rawpy>=0.18.1
+filetype>=1.2.0
+scipy>=1.11.0
+# GPU-accelerated ONNX runtime (CUDA 12 bundled in onnxruntime-gpu >= 1.18)
+# Falls back to CPU if no NVIDIA GPU is detected.
+onnxruntime-gpu>=1.18.0
