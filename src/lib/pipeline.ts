@@ -11,10 +11,33 @@ import {
   mimeForFormat,
   rotateCanvas,
   smartFit,
+  trimToOpaque,
 } from "./image-ops";
 import { removeBackgroundBlob, type ModelProgress } from "./bg-remove";
 import type { QueueItem, StudioSettings } from "./types";
 import { slugifyName } from "./utils";
+
+function fitToCanvas(cutout: HTMLCanvasElement, settings: StudioSettings): HTMLCanvasElement {
+  if (settings.width > 0 && settings.height > 0) {
+    return smartFit(cutout, settings.width, settings.height);
+  }
+  return trimToOpaque(cutout);
+}
+
+async function encodeCutout(
+  cutout: HTMLCanvasElement,
+  item: QueueItem,
+  settings: StudioSettings,
+  note: string,
+): Promise<{ blob: Blob; filename: string; note: string }> {
+  const format = settings.format;
+  const mime = mimeForFormat(format);
+  const encoded = format === "JPEG" ? flattenOnWhite(cutout) : cutout;
+  const blob = await canvasToBlob(encoded, mime, 0.95);
+  const stem = item.label.trim() || slugifyName(item.name) || "fritlagt";
+  const filename = `${stem}${settings.suffix}${extForFormat(format)}`;
+  return { blob, filename, note };
+}
 
 export async function processItem(
   item: QueueItem,
@@ -40,18 +63,20 @@ export async function processItem(
     cutout = featherAlpha(cutout, 2);
   }
 
-  if (settings.width > 0 && settings.height > 0) {
-    cutout = smartFit(cutout, settings.width, settings.height);
-  }
+  cutout = fitToCanvas(cutout, settings);
 
-  const format = settings.format;
-  const mime = mimeForFormat(format);
-  const encoded = format === "JPEG" ? flattenOnWhite(cutout) : cutout;
-  const blob = await canvasToBlob(encoded, mime, 0.95);
+  return encodeCutout(cutout, item, settings, `${afterRemove} → ${cutout.width}×${cutout.height}`);
+}
 
-  const stem = item.label.trim() || slugifyName(item.name) || "fritlagt";
-  const filename = `${stem}${settings.suffix}${extForFormat(format)}`;
-  return { blob, filename, note: `${afterRemove} → ${encoded.width}×${encoded.height}` };
+/** Re-apply canvas fit on an existing cutout — no model, so it's instant. */
+export async function refitItem(
+  item: QueueItem,
+  settings: StudioSettings,
+): Promise<{ blob: Blob; filename: string; note: string } | null> {
+  if (!item.resultBlob) return null;
+  let cutout = await blobToCanvas(item.resultBlob);
+  cutout = fitToCanvas(cutout, settings);
+  return encodeCutout(cutout, item, settings, `tilpasset ${cutout.width}×${cutout.height}`);
 }
 
 export function downloadBlob(blob: Blob, filename: string) {

@@ -1,4 +1,4 @@
-import { ImagePlus, Trash2, UserRound } from "lucide-react";
+import { ImagePlus, Trash2, UserRound, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,11 @@ const STATUS_LABEL: Record<ItemStatus, string> = {
   error: "Fejl",
 };
 
+function openFilePicker() {
+  const input = document.getElementById("file-input") as HTMLInputElement | null;
+  input?.click();
+}
+
 export function QueueList() {
   const items = useStudio((s) => s.items);
   const selectedId = useStudio((s) => s.selectedId);
@@ -25,32 +30,21 @@ export function QueueList() {
   const addSample = useStudio((s) => s.addSample);
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col rounded-xl bg-surface p-4 shadow-[var(--shadow-border)]">
-      <div className="mb-3 flex items-center justify-between gap-2">
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col rounded-xl bg-surface shadow-[var(--shadow-border)]">
+      <div className="flex shrink-0 items-center justify-between gap-2 px-3 pt-3">
         <h2 className="text-sm font-medium text-fg">Kø</h2>
         <span className="tabular-nums text-xs text-muted">{items.length}</span>
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          onClick={() => {
-            const input = document.getElementById("file-input") as HTMLInputElement | null;
-            input?.click();
-          }}
-        >
+      <div className="flex shrink-0 flex-wrap gap-1.5 p-3">
+        <Button size="sm" onClick={openFilePicker}>
           <ImagePlus />
           Tilføj
         </Button>
         <Button size="sm" variant="secondary" onClick={() => void addSample()} disabled={processing}>
           Prøve
         </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={removeSelected}
-          disabled={!selectedId || processing}
-        >
+        <Button size="sm" variant="ghost" onClick={removeSelected} disabled={!selectedId || processing}>
           <Trash2 />
         </Button>
         <Button size="sm" variant="danger" onClick={clearAll} disabled={!items.length || processing}>
@@ -59,9 +53,9 @@ export function QueueList() {
       </div>
 
       {items.length === 0 ? (
-        <EmptyQueue />
+        <p className="px-3 pb-3 text-xs text-subtle">Slip filer på siden, eller brug Tilføj.</p>
       ) : (
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea className="min-h-0 flex-1 px-2 pb-3">
           <ul className="flex flex-col gap-1 pr-2">
             {items.map((item) => {
               const active = item.id === selectedId;
@@ -71,7 +65,7 @@ export function QueueList() {
                     type="button"
                     onClick={() => select(item.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors duration-[var(--motion-quick)]",
+                      "flex min-h-11 w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors duration-[var(--motion-quick)]",
                       active ? "bg-surface-2" : "hover:bg-surface-2/60",
                     )}
                   >
@@ -82,7 +76,7 @@ export function QueueList() {
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm text-fg">{item.label || item.name}</p>
-                      <p className="tabular-nums text-[11px] text-subtle">
+                      <p className="tabular-nums text-xs text-subtle">
                         {item.width} × {item.height}
                         {item.cropY != null ? ` · ${Math.round(item.cropY * 100)}%` : ""}
                         {item.rotation ? ` · ${item.rotation}°` : ""}
@@ -96,7 +90,7 @@ export function QueueList() {
                       <Input
                         value={item.label}
                         aria-label="Spillernavn / outputnavn"
-                        className="h-8 text-xs"
+                        className="h-9 text-xs"
                         disabled={processing}
                         onChange={(e) => patchItem(item.id, { label: e.target.value })}
                       />
@@ -112,23 +106,52 @@ export function QueueList() {
   );
 }
 
-function EmptyQueue() {
+export function QueueFilmstrip() {
+  const items = useStudio((s) => s.items);
+  const selectedId = useStudio((s) => s.selectedId);
+  const processing = useStudio((s) => s.processing);
+  const select = useStudio((s) => s.select);
+  const removeSelected = useStudio((s) => s.removeSelected);
+
   return (
-    <button
-      type="button"
-      onClick={() => {
-        const input = document.getElementById("file-input") as HTMLInputElement | null;
-        input?.click();
-      }}
-      className="flex flex-1 flex-col items-center justify-center gap-3 rounded-md bg-bg px-4 py-8 text-center shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--color-fg)_12%,transparent)]"
-    >
-      <span className="grid size-12 place-items-center rounded-md bg-surface-2 text-primary">
+    <div className="flex items-center gap-2 overflow-x-auto px-3 py-2">
+      <button
+        type="button"
+        onClick={openFilePicker}
+        className="grid size-14 shrink-0 place-items-center rounded-md bg-surface-2 text-primary"
+        aria-label="Tilføj billeder"
+      >
         <ImagePlus className="size-5" />
-      </span>
-      <p className="text-sm font-medium text-fg">Slip billeder her</p>
-      <p className="max-w-[18rem] text-xs text-subtle">
-        PNG, JPEG eller WEBP. RAW skal konverteres først. Intet forlader din browser.
-      </p>
-    </button>
+      </button>
+      {items.map((item) => {
+        const active = item.id === selectedId;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => select(item.id)}
+            className={cn(
+              "relative size-14 shrink-0 overflow-hidden rounded-md",
+              active ? "ring-2 ring-primary" : "ring-1 ring-border",
+            )}
+          >
+            <img src={item.resultUrl ?? item.previewUrl} alt="" className="size-full object-cover" />
+            {item.status === "done" ? (
+              <span className="absolute right-1 bottom-1 size-1.5 rounded-full bg-success" />
+            ) : null}
+          </button>
+        );
+      })}
+      <Button
+        size="icon"
+        variant="ghost"
+        className="size-11 shrink-0"
+        disabled={!selectedId || processing}
+        onClick={removeSelected}
+        aria-label="Fjern valgt"
+      >
+        <X />
+      </Button>
+    </div>
   );
 }

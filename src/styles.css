@@ -41,12 +41,15 @@
   html {
     background: var(--color-bg);
     color: var(--color-fg);
+    height: 100%;
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    min-height: 100dvh;
+    height: 100%;
+    overflow: hidden;
     font-family: var(--font-sans);
   }
 

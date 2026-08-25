@@ -1,4 +1,4 @@
-import { Download, RotateCcw, RotateCw, Scissors, X } from "lucide-react";
+import { Download, ImagePlus, RotateCcw, RotateCw, Scissors, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useStudio } from "@/lib/store";
@@ -21,12 +21,8 @@ export function PreviewStage() {
 
   if (!item) {
     return (
-      <section className="flex min-h-0 flex-1 flex-col rounded-xl bg-surface p-4 shadow-[var(--shadow-border)]">
-        <div className="flex flex-1 items-center justify-center rounded-md bg-bg">
-          <p className="px-6 text-center text-sm text-muted">
-            Vælg et billede i køen for at beskære, rotere og se resultatet
-          </p>
-        </div>
+      <section className="flex min-h-0 flex-1 flex-col rounded-xl bg-surface p-3 shadow-[var(--shadow-border)] lg:p-4">
+        <DropZone />
       </section>
     );
   }
@@ -34,12 +30,13 @@ export function PreviewStage() {
   const canCompare = Boolean(item.resultUrl) && showResult;
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col rounded-xl bg-surface p-4 shadow-[var(--shadow-border)]">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+    <section className="flex min-h-0 flex-1 flex-col rounded-xl bg-surface p-3 shadow-[var(--shadow-border)] lg:p-4">
+      <div className="mb-2 flex shrink-0 flex-wrap items-center gap-1.5">
         <p className="min-w-0 flex-1 truncate text-sm font-medium text-fg">{item.label}</p>
         <Button
           size="sm"
           variant="secondary"
+          className="min-h-9"
           disabled={processing}
           onClick={() => patchItem(item.id, { rotation: (item.rotation + 270) % 360 })}
         >
@@ -49,6 +46,7 @@ export function PreviewStage() {
         <Button
           size="sm"
           variant="secondary"
+          className="min-h-9"
           disabled={processing}
           onClick={() => patchItem(item.id, { rotation: (item.rotation + 90) % 360 })}
         >
@@ -58,20 +56,21 @@ export function PreviewStage() {
         <Button
           size="sm"
           variant="ghost"
+          className="min-h-9"
           disabled={processing || item.cropY == null}
           onClick={() => patchItem(item.id, { cropY: null })}
         >
           <X />
-          Beskær
+          <span className="sr-only sm:not-sr-only">Beskær</span>
         </Button>
         {item.resultUrl ? (
           <>
-            <Button size="sm" variant="secondary" onClick={() => setShowResult((v) => !v)}>
+            <Button size="sm" variant="secondary" className="min-h-9" onClick={() => setShowResult((v) => !v)}>
               {showResult ? "Original" : "Resultat"}
             </Button>
-            <Button size="sm" onClick={() => downloadOne(item.id)}>
+            <Button size="sm" className="min-h-9" onClick={() => downloadOne(item.id)}>
               <Download />
-              Download
+              <span className="sr-only sm:not-sr-only">Download</span>
             </Button>
           </>
         ) : null}
@@ -96,7 +95,7 @@ export function PreviewStage() {
         ) : null}
       </div>
 
-      <div className="mt-3 flex items-center gap-3">
+      <div className="mt-2 flex shrink-0 items-center gap-3">
         {canCompare ? (
           <label className="flex min-w-0 flex-1 items-center gap-3 text-xs text-muted">
             Før / efter
@@ -118,6 +117,33 @@ export function PreviewStage() {
         )}
       </div>
     </section>
+  );
+}
+
+function DropZone() {
+  const addSample = useStudio((s) => s.addSample);
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-md bg-bg px-6 text-center">
+      <button
+        type="button"
+        onClick={() => {
+          const input = document.getElementById("file-input") as HTMLInputElement | null;
+          input?.click();
+        }}
+        className="flex flex-col items-center gap-3"
+      >
+        <span className="grid size-14 place-items-center rounded-md bg-surface-2 text-primary">
+          <ImagePlus className="size-6" />
+        </span>
+        <p className="text-base font-medium text-fg">Slip billeder her</p>
+        <p className="max-w-sm text-sm text-subtle">
+          PNG, JPEG eller WEBP. Intet forlader din browser. Du kan også paste med Ctrl+V.
+        </p>
+      </button>
+      <Button variant="secondary" onClick={() => void addSample()}>
+        Åbn prøvebillede
+      </Button>
+    </div>
   );
 }
 
@@ -279,7 +305,7 @@ function CompareView({
         className="checker absolute inset-0 overflow-hidden"
         style={{ clipPath: `inset(0 ${Math.round((1 - compare) * 100)}% 0 0)` }}
       >
-        <img src={result} alt="Fritlagt" className="size-full object-contain" />
+        <img src={result} alt="Fritlagt" className="size-full object-contain object-bottom" />
       </div>
       <div
         className="pointer-events-none absolute inset-y-0 w-px bg-primary"

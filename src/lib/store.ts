@@ -11,7 +11,7 @@ import {
 import { formatBytes } from "./utils";
 import { readImageSize } from "./image-ops";
 import { preloadModel, type ModelProgress } from "./bg-remove";
-import { downloadBlob, processItem, resultFilename, zipResults } from "./pipeline";
+import { downloadBlob, processItem, refitItem, resultFilename, zipResults } from "./pipeline";
 
 function loadSettings(): StudioSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
@@ -66,6 +66,7 @@ type StudioState = {
   downloadOne: (id: string) => void;
   downloadAll: () => Promise<void>;
   log: (msg: string) => void;
+  refitDone: () => Promise<void>;
 };
 
 export const useStudio = create<StudioState>((set, get) => ({
@@ -83,6 +84,29 @@ export const useStudio = create<StudioState>((set, get) => ({
     set((s) => ({
       logs: [...s.logs.slice(-180), `${new Date().toLocaleTimeString("da-DK")}  ${msg}`],
     })),
+
+  refitDone: async () => {
+    const { items, settings, processing } = get();
+    if (processing) return;
+    const done = items.filter((i) => i.status === "done" && i.resultBlob);
+    if (!done.length) return;
+    for (const item of done) {
+      try {
+        const result = await refitItem(item, settings);
+        if (!result) continue;
+        const resultUrl = URL.createObjectURL(result.blob);
+        const prev = get().items.find((i) => i.id === item.id);
+        if (prev?.resultUrl) URL.revokeObjectURL(prev.resultUrl);
+        set((s) => ({
+          items: s.items.map((i) =>
+            i.id === item.id ? { ...i, resultBlob: result.blob, resultUrl } : i,
+          ),
+        }));
+      } catch {
+        /* keep the previous result */
+      }
+    }
+  },
 
   addFiles: async (files) => {
     const list = Array.from(files);

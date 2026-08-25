@@ -110,8 +110,9 @@ function opaqueBBox(data: ImageData): { x: number; y: number; w: number; h: numb
 }
 
 /**
- * Scale subject to fit inside target, preserve aspect, center on transparent canvas.
- * Matches the desktop app's `_smart_fit`.
+ * Scale subject to fit inside target, preserve aspect, center horizontally
+ * and pin to the bottom of a transparent canvas. HUD / broadcast portraits
+ * must sit on the baseline — they should never float.
  */
 export function smartFit(
   source: HTMLCanvasElement,
@@ -140,17 +141,31 @@ export function smartFit(
   }
 
   const scale = Math.min(targetW / sw, targetH / sh);
-  const nw = Math.max(1, Math.round(sw * scale));
-  const nh = Math.max(1, Math.round(sh * scale));
+  const nw = Math.min(targetW, Math.max(1, Math.round(sw * scale)));
+  const nh = Math.min(targetH, Math.max(1, Math.round(sh * scale)));
   const canvas = createCanvas(targetW, targetH);
   const out = getContext(canvas);
   out.imageSmoothingEnabled = true;
   out.imageSmoothingQuality = "high";
   const x = Math.floor((targetW - nw) / 2);
-  const y = Math.floor((targetH - nh) / 2);
+  const y = Math.max(0, targetH - nh);
   out.drawImage(subject, sx, sy, sw, sh, x, y, nw, nh);
   return canvas;
 }
+
+/** Crop away fully transparent padding so the subject sits on the image edges. */
+export function trimToOpaque(source: HTMLCanvasElement): HTMLCanvasElement {
+  const ctx = getContext(source);
+  const bbox = opaqueBBox(ctx.getImageData(0, 0, source.width, source.height));
+  if (!bbox) return source;
+  if (bbox.x === 0 && bbox.y === 0 && bbox.w === source.width && bbox.h === source.height) {
+    return source;
+  }
+  const canvas = createCanvas(bbox.w, bbox.h);
+  getContext(canvas).drawImage(source, bbox.x, bbox.y, bbox.w, bbox.h, 0, 0, bbox.w, bbox.h);
+  return canvas;
+}
+
 
 const HOLE_ALPHA = 32;
 

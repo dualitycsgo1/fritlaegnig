@@ -1,6 +1,7 @@
 import { SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
-import { QueueList } from "@/components/queue-list";
+import { ActionBar } from "@/components/action-bar";
+import { QueueFilmstrip, QueueList } from "@/components/queue-list";
 import { PreviewStage } from "@/components/preview-stage";
 import { SettingsPanel } from "@/components/settings-panel";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ export function Studio() {
   const items = useStudio((s) => s.items);
   const logs = useStudio((s) => s.logs);
   const modelReady = useStudio((s) => s.modelReady);
+  const refitDone = useStudio((s) => s.refitDone);
   const [dragging, setDragging] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [gpuLabel, setGpuLabel] = useState("CPU");
@@ -32,12 +34,17 @@ export function Studio() {
     if ("gpu" in navigator) setGpuLabel("WebGPU");
   }, []);
 
+  useEffect(() => {
+    void refitDone();
+  }, [refitDone]);
+
+  const empty = items.length === 0;
   const done = items.filter((i) => i.status === "done").length;
 
   return (
     <div
       className={cn(
-        "flex h-dvh flex-col bg-bg text-fg",
+        "flex h-dvh flex-col overflow-hidden bg-bg text-fg",
         dragging && "ring-2 ring-primary ring-inset",
       )}
       onDragEnter={(e) => {
@@ -69,61 +76,55 @@ export function Studio() {
         }}
       />
 
-      <header className="flex items-center gap-3 border-b border-border px-4 py-3 lg:px-5">
+      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3 lg:px-4">
         <Mark />
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-lg font-semibold tracking-tight text-fg">
-            Fritlægning
-          </h1>
-          <p className="truncate text-xs text-muted">
-            CS2 HUD & Broadcast · kører i browseren
+          <h1 className="font-display text-base font-semibold tracking-tight text-fg">Fritlægning</h1>
+          <p className="hidden truncate text-xs text-muted sm:block">
+            {processing
+              ? (logs.at(-1) ?? "Behandler…")
+              : done
+                ? `${done} fritlagt`
+                : "CS2 HUD & broadcast · kører lokalt"}
           </p>
         </div>
-        <span className="hidden rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-medium text-muted sm:inline">
+        <span className="hidden rounded-full bg-surface-2 px-2.5 py-1 text-xs font-medium text-muted sm:inline">
           {gpuLabel}
         </span>
-        <div className="lg:hidden">
-          <Button size="sm" variant="secondary" onClick={() => setSettingsOpen(true)}>
-            <SlidersHorizontal />
-            Indstillinger
-          </Button>
-        </div>
+        <span className="hidden text-xs text-subtle lg:inline">
+          {modelReady ? "Model cached" : "Model hentes ved første kørsel"}
+        </span>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="lg:hidden"
+          onClick={() => setSettingsOpen(true)}
+        >
+          <SlidersHorizontal />
+          <span className="sr-only sm:not-sr-only">Indstillinger</span>
+        </Button>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 p-3 lg:grid lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)_minmax(260px,300px)]">
-        <div
-          className={cn(
-            "flex min-h-[160px] flex-col",
-            items.length === 0 ? "flex-1 lg:max-h-none lg:flex-1" : "max-h-[34vh] lg:max-h-none",
-          )}
-        >
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:grid lg:grid-cols-[minmax(220px,260px)_minmax(0,1fr)_minmax(260px,300px)] lg:grid-rows-[minmax(0,1fr)] lg:gap-3 lg:p-3">
+        <div className="hidden min-h-0 min-w-0 overflow-hidden lg:flex">
           <QueueList />
         </div>
-        <div
-          className={cn(
-            "min-h-[280px] flex-1 flex-col",
-            items.length === 0 ? "hidden lg:flex" : "flex",
-          )}
-        >
+
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3 lg:p-0">
           <PreviewStage />
         </div>
-        <SettingsPanel className="hidden lg:flex" />
-      </div>
 
-      <footer className="flex items-center justify-between gap-3 border-t border-border px-4 py-2 text-xs text-muted">
-        <p className="truncate">
-          {processing
-            ? logs.at(-1) ?? "Behandler…"
-            : dragging
-              ? "Slip billederne for at tilføje dem"
-              : done
-                ? `${done} fritlagt · download enkeltvis eller som ZIP`
-                : "Billeder forlader aldrig din maskine"}
-        </p>
-        <p className="hidden shrink-0 tabular-nums sm:block">
-          {modelReady ? "Model cached" : "Model hentes ved første kørsel"}
-        </p>
-      </footer>
+        <div className="hidden min-h-0 min-w-0 overflow-hidden lg:flex">
+          <SettingsPanel />
+        </div>
+
+        <div className="shrink-0 border-t border-border lg:hidden">
+          {!empty ? <QueueFilmstrip /> : null}
+          <div className="px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <ActionBar />
+          </div>
+        </div>
+      </div>
 
       {dragging ? (
         <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-bg/70">
@@ -139,7 +140,7 @@ export function Studio() {
             <SheetTitle className="text-base font-medium text-fg">Indstillinger</SheetTitle>
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <SettingsPanel className="rounded-none bg-transparent p-0 shadow-none" />
+            <SettingsPanel embedded />
           </div>
         </SheetContent>
       </Sheet>
@@ -151,7 +152,7 @@ function Mark() {
   return (
     <span
       aria-hidden
-      className="grid size-9 place-items-center rounded-md bg-primary text-primary-fg"
+      className="grid size-8 place-items-center rounded-md bg-primary text-primary-fg"
     >
       <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M4 20 14 4" />

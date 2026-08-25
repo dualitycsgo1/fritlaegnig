@@ -1,16 +1,25 @@
-# Fritlægning (web)
+# Fritlægning
 
-Fritlæg CS2 HUD- og broadcast-spillerfotos i browseren. Upload, beskær, rotér, download PNG/WEBP med gennemsigtig baggrund — eller en ZIP af hele holdet.
+Web-app til at fritlægge CS2 HUD- og broadcast-spillerfotos i browseren. Billederne forlader aldrig din maskine.
 
-Alt kører lokalt i browseren. Billeder uploades ikke til en server.
-
-Desktop-appen (Python / rembg) ligger på `master`.
+- **`web` branch** — denne app (Vercel)
+- **`master` branch** — den originale Python/Tkinter desktop-app
 
 ## Vercel
 
-1. I dit Vercel-projekt: sæt **Production Branch** til `web`.
-2. Framework Preset: Other (buildet skriver Vercel Output API under `npm run build`).
-3. Build command: `npm run build`
-4. Install command: `npm install`
+Vercel-projektet skal bygge **Vite / Other**, ikke Python.
 
-Første fritlægning henter AI-modellen (cachet bagefter). RAW-filer understøttes ikke i browseren — konvertér til JPEG/PNG først.
+1. Project → Settings → General
+2. **Framework Preset:** `Vite` (eller `Other`)
+3. **Node.js Version:** `22.x`
+4. **Root Directory:** tom / `.`
+5. Git branch: `web`
+
+`vercel.json` i denne branch tvinger Vite-build. Hvis du stadig ser `No python entrypoint found`, er Framework Preset stadig sat til Python i dashboardet — skift den.
+
+## Lokalt
+
+```bash
+npm install
+npm run dev
+```
