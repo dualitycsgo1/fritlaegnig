@@ -109,7 +109,17 @@ try {
     // networkidle never settles and would burn the whole timeout.
     const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: timeoutMs });
     const status = resp?.status() ?? 0;
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(400);
+    const loginUser = page.getByLabel(/brugernavn/i);
+    if ((await loginUser.count()) > 0) {
+      await loginUser.fill(process.env.SITE_LOCK_USER || "barstool");
+      await page.getByLabel(/adgangskode/i).fill(process.env.SITE_LOCK_PASSWORD || "Welcome04!");
+      await page.getByRole("button", { name: /log ind/i }).click();
+      await page.getByRole("link", { name: /log ud/i }).waitFor({ timeout: timeoutMs });
+      await page.waitForTimeout(600);
+    } else {
+      await page.waitForTimeout(600);
+    }
 
     const title = await page.title();
     const hasCanvas = (await page.locator("canvas").count()) > 0;

@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from "lucide-react";
+import { LogOut, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ActionBar } from "@/components/action-bar";
 import { QueueFilmstrip, QueueList } from "@/components/queue-list";
@@ -89,6 +89,13 @@ export function Studio() {
         <span className="hidden text-xs text-subtle lg:inline">
           {modelReady ? "Model cached" : "Model hentes ved første kørsel"}
         </span>
+        <a
+          href="/logout"
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-sm px-2.5 text-xs font-medium text-muted hover:bg-surface-2 hover:text-fg"
+        >
+          <LogOut className="size-3.5" />
+          <span className="sr-only sm:not-sr-only">Log ud</span>
+        </a>
         <Button
           size="sm"
           variant="secondary"

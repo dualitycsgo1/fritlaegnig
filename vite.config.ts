@@ -10,6 +10,8 @@ import { nitro } from "nitro/vite";
 import { grokPwaPlugin } from "./scripts/grok-pwa-plugin.mjs";
 // @ts-expect-error JS plugin alongside the TS vite config
 import { appEnvPlugin } from "./scripts/app-env-plugin.mjs";
+// @ts-expect-error JS plugin alongside the TS vite config
+import { siteLockPlugin } from "./scripts/site-lock-plugin.mjs";
 import { isMigrationFile } from "./scripts/migration-plan.mjs";
 
 /** The files `src/lib/db.ts` globs — same directory, same non-recursive scope. */
@@ -164,6 +166,7 @@ export default defineConfig(({ command, isPreview }) => ({
     external: ["@imgly/background-removal", "onnxruntime-web"],
   },
   plugins: [
+    siteLockPlugin(),
     pgliteBootstrapPlugin(),
     // Before tanstackStart so /auth/popup never falls through to the SPA.
     authPopupPlugin(),

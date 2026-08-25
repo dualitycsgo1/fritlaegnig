@@ -17,6 +17,8 @@ Vercel-projektet skal bygge **Vite / Other**, ikke Python.
 
 `vercel.json` i denne branch tvinger Vite-build. Hvis du stadig ser `No python entrypoint found`, er Framework Preset stadig sat til Python i dashboardet — skift den.
 
+Sitet kræver login. Brugernavn og adgangskode tjekkes på serveren (og på Vercel Edge, så JS-filerne heller ikke kan hentes uden session). Du kan overstyre dem med env-variablerne `SITE_LOCK_USER` og `SITE_LOCK_PASSWORD` i Vercel.
+
 ## Lokalt
 
 ```bash
