@@ -84,6 +84,9 @@ export function QueueList() {
                     </div>
                     <Badge variant={item.status}>{STATUS_LABEL[item.status]}</Badge>
                   </button>
+                  {item.error ? (
+                    <p className="px-2 pb-1 text-xs text-danger">{item.error}</p>
+                  ) : null}
                   {active ? (
                     <div className="mt-1 mb-2 flex items-center gap-2 px-2">
                       <UserRound className="size-3.5 text-subtle" />

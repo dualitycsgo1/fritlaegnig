@@ -16,7 +16,6 @@ export function Studio() {
   const items = useStudio((s) => s.items);
   const logs = useStudio((s) => s.logs);
   const modelReady = useStudio((s) => s.modelReady);
-  const refitDone = useStudio((s) => s.refitDone);
   const [dragging, setDragging] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [gpuLabel, setGpuLabel] = useState("CPU");
@@ -33,10 +32,6 @@ export function Studio() {
   useEffect(() => {
     if ("gpu" in navigator) setGpuLabel("WebGPU");
   }, []);
-
-  useEffect(() => {
-    void refitDone();
-  }, [refitDone]);
 
   const empty = items.length === 0;
   const done = items.filter((i) => i.status === "done").length;

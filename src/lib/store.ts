@@ -212,67 +212,72 @@ export const useStudio = create<StudioState>((set, get) => ({
     const { items, processing, settings } = get();
     if (processing) return;
     const pending = items.filter((i) => i.status !== "done");
-    if (!pending.length) {
+    const queue = pending.length ? pending : items;
+    if (!queue.length) {
       get().log("Ingen billeder at behandle.");
       return;
     }
-    set({ processing: true, stopRequested: false });
+    set({ processing: true, stopRequested: false, toastError: null });
     get().log(`Henter AI-model (${settings.model}) — kun første gang.`);
     try {
-      await preloadModel(settings.model, (p) => set({ modelProgress: p }));
-      set({ modelReady: true, modelProgress: null });
-      get().log("Model klar. Behandler i browseren — intet uploades.");
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Model kunne ikke indlæses";
-      get().log(`Model-fejl: ${msg}`);
-      set({ processing: false, modelProgress: null, toastError: msg });
-      return;
-    }
-
-    for (const item of pending) {
-      if (get().stopRequested) {
-        get().log("Stoppet.");
-        break;
-      }
-      set((s) => ({
-        selectedId: item.id,
-        items: s.items.map((i) =>
-          i.id === item.id ? { ...i, status: "processing" as const, error: null } : i,
-        ),
-      }));
-      get().log(`${item.label} …`);
       try {
-        const live = get().items.find((i) => i.id === item.id) ?? item;
-        const { blob, filename, note } = await processItem(live, get().settings, (p) =>
-          set({ modelProgress: p }),
-        );
-        const resultUrl = URL.createObjectURL(blob);
-        const prev = get().items.find((i) => i.id === item.id);
-        if (prev?.resultUrl) URL.revokeObjectURL(prev.resultUrl);
-        set((s) => ({
-          modelProgress: null,
-          items: s.items.map((i) =>
-            i.id === item.id
-              ? { ...i, status: "done" as const, resultBlob: blob, resultUrl, error: null }
-              : i,
-          ),
-        }));
-        get().log(`  → ${filename} (${note})`);
+        await preloadModel(settings.model, (p) => set({ modelProgress: p }));
+        set({ modelReady: true, modelProgress: null });
+        get().log("Model klar. Behandler i browseren — intet uploades.");
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Ukendt fejl";
+        const msg = err instanceof Error ? err.message : "Model kunne ikke indlæses";
+        get().log(`Model-fejl: ${msg}`);
+        set({ toastError: msg });
+        return;
+      }
+
+      for (const item of queue) {
+        if (get().stopRequested) {
+          get().log("Stoppet.");
+          break;
+        }
         set((s) => ({
-          modelProgress: null,
+          selectedId: item.id,
           items: s.items.map((i) =>
-            i.id === item.id ? { ...i, status: "error" as const, error: msg } : i,
+            i.id === item.id ? { ...i, status: "processing" as const, error: null } : i,
           ),
         }));
-        get().log(`  Fejl: ${msg}`);
+        get().log(`${item.label} …`);
+        try {
+          const live = get().items.find((i) => i.id === item.id) ?? item;
+          const { blob, filename, note } = await processItem(live, get().settings, (p) =>
+            set({ modelProgress: p }),
+          );
+          const resultUrl = URL.createObjectURL(blob);
+          const prev = get().items.find((i) => i.id === item.id);
+          if (prev?.resultUrl) URL.revokeObjectURL(prev.resultUrl);
+          set((s) => ({
+            modelProgress: null,
+            items: s.items.map((i) =>
+              i.id === item.id
+                ? { ...i, status: "done" as const, resultBlob: blob, resultUrl, error: null }
+                : i,
+            ),
+          }));
+          get().log(`  → ${filename} (${note})`);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Ukendt fejl";
+          set((s) => ({
+            modelProgress: null,
+            toastError: msg,
+            items: s.items.map((i) =>
+              i.id === item.id ? { ...i, status: "error" as const, error: msg } : i,
+            ),
+          }));
+          get().log(`  Fejl: ${msg}`);
+        }
       }
-    }
 
-    set({ processing: false, stopRequested: false, modelProgress: null });
-    const done = get().items.filter((i) => i.status === "done").length;
-    get().log(`Færdig. ${done} / ${get().items.length} fritlagt.`);
+      const done = get().items.filter((i) => i.status === "done").length;
+      get().log(`Færdig. ${done} / ${get().items.length} fritlagt.`);
+    } finally {
+      set({ processing: false, stopRequested: false, modelProgress: null });
+    }
   },
 
   downloadOne: (id) => {

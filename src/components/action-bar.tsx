@@ -11,6 +11,8 @@ export function ActionBar({ className }: { className?: string }) {
   const stopProcessing = useStudio((s) => s.stopProcessing);
   const downloadAll = useStudio((s) => s.downloadAll);
   const modelProgress = useStudio((s) => s.modelProgress);
+  const logs = useStudio((s) => s.logs);
+  const toastError = useStudio((s) => s.toastError);
 
   const done = items.filter((i) => i.status === "done").length;
   const total = items.length;
@@ -20,8 +22,16 @@ export function ActionBar({ className }: { className?: string }) {
     modelProgress && modelProgress.total > 0
       ? Math.round((modelProgress.current / modelProgress.total) * 100)
       : processing
-        ? Math.min(95, pct)
+        ? Math.min(95, Math.max(pct, 8))
         : pct;
+
+  const label = processing
+    ? "Stop"
+    : pending
+      ? `Fritlæg ${pending}`
+      : done
+        ? "Fritlæg igen"
+        : "Fritlæg";
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
@@ -35,10 +45,10 @@ export function ActionBar({ className }: { className?: string }) {
           <Button
             className="min-h-11 flex-1"
             onClick={() => void startProcessing()}
-            disabled={!pending}
+            disabled={!total}
           >
             <Play className="size-3.5 fill-current" />
-            {pending ? `Fritlæg ${pending}` : "Fritlæg"}
+            {label}
           </Button>
         )}
         <Button
@@ -51,18 +61,22 @@ export function ActionBar({ className }: { className?: string }) {
           {done > 1 ? `ZIP ${done}` : "Hent"}
         </Button>
       </div>
-      <Progress value={modelPct} />
-      <p className="text-xs text-muted">
-        {processing
-          ? modelProgress
-            ? `Henter model · ${modelPct}%`
-            : `Behandler ${done}/${total}`
-          : done
-            ? `${done} færdig`
-            : total
-              ? "Klar til fritlægning"
-              : "Tilføj billeder for at starte"}
-      </p>
+      <Progress value={processing ? modelPct : done ? 100 : 0} />
+      {toastError ? (
+        <p className="text-xs text-danger">{toastError}</p>
+      ) : (
+        <p className="truncate text-xs text-muted">
+          {processing
+            ? modelProgress
+              ? `Henter ${modelProgress.key.split("/").pop() ?? "model"} · ${modelPct}%`
+              : logs.at(-1)?.replace(/^\S+\s+\S+\s+/, "") ?? `Behandler ${done}/${total}`
+            : done
+              ? `${done} færdig — tryk Fritlæg igen for at køre om`
+              : total
+                ? "Klar til fritlægning"
+                : "Tilføj billeder for at starte"}
+        </p>
+      )}
     </div>
   );
 }

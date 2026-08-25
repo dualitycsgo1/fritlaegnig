@@ -89,8 +89,14 @@ export function PreviewStage() {
           />
         )}
         {item.status === "processing" ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-bg/55">
-            <p className="text-sm text-fg">Fritlægger…</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-bg/70">
+            <p className="text-sm font-medium text-fg">Fritlægger…</p>
+            <p className="px-4 text-center text-xs text-muted">Første kørsel henter AI-modellen. Bliv på siden.</p>
+          </div>
+        ) : null}
+        {item.status === "error" && item.error ? (
+          <div className="absolute inset-x-0 bottom-0 bg-danger/15 px-3 py-2 text-xs text-danger">
+            {item.error}
           </div>
         ) : null}
       </div>
