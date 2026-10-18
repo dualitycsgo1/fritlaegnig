@@ -72,7 +72,7 @@ export function SettingsPanel({
                 onChange={(e) => setSettings({ height: Number(e.target.value.replace(/\D/g, "")) || 0 })}
               />
             </div>
-            <p className="text-xs text-subtle">Motivet centreres vandret og sættes i bund.</p>
+            <p className="text-xs text-subtle">Motivet skaleres skarpt, centreres vandret og sættes i bunden.</p>
           </section>
 
           <section className="grid grid-cols-2 gap-2">

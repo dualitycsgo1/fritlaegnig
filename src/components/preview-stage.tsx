@@ -311,7 +311,7 @@ function CompareView({
         className="checker absolute inset-0 overflow-hidden"
         style={{ clipPath: `inset(0 ${Math.round((1 - compare) * 100)}% 0 0)` }}
       >
-        <img src={result} alt="Fritlagt" className="size-full object-contain object-bottom" />
+        <img src={result} alt="Fritlagt" className="size-full object-contain" />
       </div>
       <div
         className="pointer-events-none absolute inset-y-0 w-px bg-primary"

@@ -31,10 +31,11 @@ function baseConfig(
 ): Record<string, unknown> {
   return {
     model: QUALITY_MODELS[preset].id,
-    // CPU is reliable across Chrome/Vercel. WebGPU often reports "no adapters"
-    // and then yields an opaque image with no error.
+    // CPU is reliable. The model always runs at 1024²; rescale puts the
+    // mask back on the original pixels instead of a stretched preview.
     device: "cpu",
     proxyToWorker: true,
+    rescale: true,
     output: { format: "image/png", quality: 1 },
     progress: (key: string, current: number, total: number) => {
       onProgress?.({ key, current, total });

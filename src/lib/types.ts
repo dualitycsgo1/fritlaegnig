@@ -49,17 +49,17 @@ export const QUALITY_MODELS: Record<
   fast: {
     id: "isnet_quint8",
     label: "Hurtig",
-    hint: "Mindre model — godt til mange billeder",
+    hint: "Lille model — hurtigere, grovere kanter",
   },
   standard: {
-    id: "isnet_fp16",
+    id: "isnet",
     label: "Standard",
-    hint: "ISNet — balanceret kvalitet og hastighed",
+    hint: "Fuld ISNet — skarpere kanter, tættere på desktop",
   },
   high: {
     id: "isnet",
     label: "Høj kvalitet",
-    hint: "Bedst til spillerportrætter og hår",
+    hint: "Samme model, flere pixels før skalering",
   },
 };
 
